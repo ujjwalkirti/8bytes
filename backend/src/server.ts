@@ -6,26 +6,26 @@ import { startMarketFeeder } from './services/marketFeeder';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 3000;
-const SERVER_PORT = process.env.SERVER_PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: process.env.ALLOWED_ORIGINS || "http://localhost:3000",
-        methods: ["GET", "POST"]
+        origin: process.env.ALLOWED_ORIGINS || ["http://localhost:3000", "https://8bytes.vercel.app"],
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
 io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
+    console.log('✅ Client connected:', socket.id);
 
     socket.on('subscribe_stocks', (tickers: string[]) => {
         tickers.forEach(ticker => {
             const roomName = `stock:${ticker}`;
             socket.join(roomName);
-            console.log(`Socket ${socket.id} joined ${roomName}`);
+            console.log(`📊 Socket ${socket.id} joined ${roomName}`);
         });
     });
 
@@ -36,16 +36,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        console.log('❌ Client disconnected');
     });
 });
 
 startMarketFeeder(io);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`[api]: API is running at http://localhost:${PORT}`);
-});
-
-server.listen(SERVER_PORT, () => {
-    console.log(`[server]: Server is running at http://localhost:${SERVER_PORT}`);
+    console.log(`[server]: Socket.IO is running at http://localhost:${PORT}`);
 });
