@@ -13,7 +13,6 @@ export const useStockSocket = (initialHoldings: PortfolioItem[], onUpdate: (data
 				reconnectionDelay: 1000,
 				reconnectionDelayMax: 5000,
 				reconnectionAttempts: Infinity,
-				transports: ["websocket"],
 			});
 
 			socketRef.current.on("connect", () => {
