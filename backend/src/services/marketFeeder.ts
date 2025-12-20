@@ -53,12 +53,6 @@ const startStockLoop = async (stock: Holding, io: Server) => {
                     getGoogleFinanceData(stock.ticker, stock.exchange)
                 ]);
 
-                // if both yahoo and google returned zero data, skip emitting
-                if (google.pe === 0 && google.eps === 0) {
-                    console.warn(`Skipping update for ${stock.ticker} due to zero data from both sources.`);
-                    continue;
-                }
-
                 const updatePayload = {
                     ticker: stock.ticker,
                     cmp: yahoo.price,
