@@ -107,9 +107,23 @@ const scrapeStock = async (ticker: string, exchange: string): Promise<{ pe: numb
                 console.error(`Failed to close cached page for ${ticker}:`, e);
             }
             pageCache.delete(cacheKey);
+        } else {
+            console.warn(`No cached page found for ${ticker} to close.`);
+            // remove any stale pages in the browser that match the URL
+            const pages = browserInstance ? await browserInstance.pages() : [];
+            for (const p of pages) {
+                if (p.url().includes(`/finance/quote/${ticker}:${exchange}`)) {
+                    try {
+                        await p.close();
+                    } catch (e) {
+                        console.error(`Failed to close stale page for ${ticker}:`, e);
+                    }
+                }
+            }
         }
 
-        console.error(`Google Scraper Error for ${ticker}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`Google Scraper Error for ${ticker}:`, errorMessage, error);
         return { pe: 0, eps: 0 };
     }
 };
