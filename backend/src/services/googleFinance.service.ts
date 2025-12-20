@@ -11,10 +11,17 @@ const getOrCreatePage = async (ticker: string, exchange: string): Promise<Page> 
 
     if (pageCache.has(cacheKey)) {
         const existingPage = pageCache.get(cacheKey)!;
-        if (!existingPage.isClosed()) {
+        if (!existingPage.isClosed() && existingPage.url() === url) {
             return existingPage;
         }
         pageCache.delete(cacheKey);
+        try {
+            if (!existingPage.isClosed()) {
+                await existingPage.close();
+            }
+        } catch (e) {
+            console.error(`Failed to close stale cached page for ${ticker}:`, e);
+        }
     }
 
     if (!browserInstance) {

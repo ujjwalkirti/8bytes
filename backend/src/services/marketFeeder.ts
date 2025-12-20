@@ -29,16 +29,16 @@ const getBrowser = async (): Promise<void> => {
     });
 };
 
-export const startMarketFeeder = (io: Server) => {
+export const startMarketFeeder = async (io: Server) => {
     console.log("Starting Market Feeder Worker...");
-    getBrowser()
+    await getBrowser()
 
-    PORTFOLIO_HOLDINGS.forEach(stock => {
+    for (const stock of PORTFOLIO_HOLDINGS) {
         startStockLoop(stock, io).catch(err =>
             console.error(`Fatal error in loop for ${stock.ticker}`, err)
-        );;
-    });
-
+        );
+        await new Promise(r => setTimeout(r, 10000));
+    }
 };
 
 const startStockLoop = async (stock: Holding, io: Server) => {
