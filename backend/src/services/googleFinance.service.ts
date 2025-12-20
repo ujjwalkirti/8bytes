@@ -1,8 +1,9 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
+import NodeCache from 'node-cache';
 import { browserInstance } from './marketFeeder';
 
-const cache = new Map<string, { pe: number; eps: number; timestamp: number }>();
-const CACHE_DURATION = 60 * 1000;
+const cache = new NodeCache({ stdTTL: 60, checkperiod: 120 });
+const CACHE_DURATION = 60;
 const pageCache = new Map<string, Page>();
 
 const getOrCreatePage = async (ticker: string, exchange: string): Promise<Page> => {
@@ -116,9 +117,9 @@ const scrapeStock = async (ticker: string, exchange: string): Promise<{ pe: numb
 export const getGoogleFinanceData = async (ticker: string, exchange: string) => {
     const googleSymbol = `${ticker}:${exchange}`;
 
-    const cached = cache.get(googleSymbol);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        return { pe: cached.pe, eps: cached.eps };
+    const cached = cache.get<{ pe: number; eps: number }>(googleSymbol);
+    if (cached) {
+        return cached;
     }
 
     const data = await scrapeStock(ticker, exchange);
@@ -128,7 +129,7 @@ export const getGoogleFinanceData = async (ticker: string, exchange: string) => 
         return data;
     }
 
-    cache.set(googleSymbol, { ...data, timestamp: Date.now() });
+    cache.set(googleSymbol, data, CACHE_DURATION);
     return data;
 };
 
