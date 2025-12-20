@@ -35,7 +35,7 @@ const getOrCreatePage = async (ticker: string, exchange: string): Promise<Page> 
     }
 };
 
-const scrapeStock = async (ticker: string, exchange: string, retries = 3): Promise<{ pe: number; eps: number }> => {
+const scrapeStock = async (ticker: string, exchange: string): Promise<{ pe: number; eps: number }> => {
     if (!browserInstance) return { pe: 0, eps: 0 };
 
     let page;
@@ -101,14 +101,7 @@ const scrapeStock = async (ticker: string, exchange: string, retries = 3): Promi
             pageCache.delete(cacheKey);
         }
 
-        if (retries > 0) {
-            console.log(`Retry ${4 - retries}/3 for ${ticker} after error`);
-            const delay = Math.pow(2, 3 - retries) * 1000;
-            await new Promise(r => setTimeout(r, delay));
-            return scrapeStock(ticker, exchange, retries - 1);
-        }
-
-        console.error(`Google Scraper Error for ${ticker}:`, error);
+        console.error(`Google Scraper Error for ${ticker}`);
         return { pe: 0, eps: 0 };
     }
 };
@@ -122,6 +115,12 @@ export const getGoogleFinanceData = async (ticker: string, exchange: string) => 
     }
 
     const data = await scrapeStock(ticker, exchange);
+
+    //  if the pe and eps are zero, do not update the cache
+    if (data.pe === 0 && data.eps === 0) {
+        return data;
+    }
+
     cache.set(googleSymbol, { ...data, timestamp: Date.now() });
     return data;
 };

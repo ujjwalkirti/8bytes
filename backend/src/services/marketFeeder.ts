@@ -14,7 +14,7 @@ const getBrowser = async (): Promise<void> => {
     }
 
     browserInstance = await puppeteer.launch({
-        headless: true,
+        headless: false,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -52,6 +52,12 @@ const startStockLoop = async (stock: Holding, io: Server) => {
                     getYahooData(stock.ticker, stock.exchange),
                     getGoogleFinanceData(stock.ticker, stock.exchange)
                 ]);
+
+                // if both yahoo and google returned zero data, skip emitting
+                if (google.pe === 0 && google.eps === 0) {
+                    console.warn(`Skipping update for ${stock.ticker} due to zero data from both sources.`);
+                    continue;
+                }
 
                 const updatePayload = {
                     ticker: stock.ticker,
